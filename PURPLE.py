@@ -39,6 +39,7 @@ pcount = 0
 ppleace = 0
 key = "-"
 got = False
+start = 2
 musica = 0
 render = False
 volume = 0.3
@@ -76,11 +77,11 @@ def check():
 	global connected
 	global stime
 	global s
+	stime = datetime.now().timestamp()
 	if host != "":
 		s = socket.socket()
 		s.connect((host, 1094))
 		connected = True
-		stime = datetime.now().timestamp()
 		if has_discord:
 			RPC.update(large_image="logo", large_text="PURPLE",
 					state="Multiplayer",
@@ -513,9 +514,9 @@ while playing:
 						name += event.unicode
 					else:
 						host += event.unicode
-
 		pygame.draw.rect(pleace, (127.5, 0, 127.5), pygame.Rect(0, 400, 700, 110))
 		pygame.draw.rect(pleace, (127.5, 0, 127.5), pygame.Rect(0, 540, 700, 110))
+		pygame.draw.rect(pleace, (127.5, 0, 127.5), pygame.Rect(150, 150, 400, 100))
 		pleace.blit(pygame.font.Font("arial.ttf", 100).render("PURPLE", True, (255, 255, 255)), (150, 150))
 		pleace.blit(pygame.font.Font("arial.ttf", 50).render("Name:", True, (255, 255, 255)), (0, 400))
 		pleace.blit(pygame.font.Font("arial.ttf", 50).render(name , True, (255, 255, 255)), (0, 450))
