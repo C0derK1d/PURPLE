@@ -1,5 +1,4 @@
 from datetime import datetime
-import sys
 import socket
 import threading
 import random
@@ -9,7 +8,6 @@ import time
 import os
 import io
 os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = "hide"
-import subprocess
 import pygame
 import tkinter
 from tkinter import filedialog
@@ -24,12 +22,20 @@ pygame.init()
 def load_img_url(url):
 	return pygame.image.load(io.BytesIO(requests.get(url).content))
 
+def center_rotate(image, angle, pos):
+	rot_image = pygame.transform.rotate(image, angle)
+	pos = rot_image.get_rect(center = image.get_rect(topleft = pos).center).topleft
+	return rot_image, pos
 
 start_img = load_img_url("https://cdn.discordapp.com/attachments/767022409563504672/820584228915904512/purplogo4.3.png")
 icon = load_img_url("https://raw.githubusercontent.com/BotiPro2007/PURPLE/main/PURPLE32.png")
 character1_p = load_img_url("https://raw.githubusercontent.com/BotiPro2007/PURPLE/main/character1.png")
+#character1_p = load_img_url("https://raw.githubusercontent.com/BotiPro2007/PURPLE-dev-style/main/character1.png")
 character2_p = load_img_url("https://raw.githubusercontent.com/BotiPro2007/PURPLE/main/character2.png")
+#character2_p = load_img_url("https://raw.githubusercontent.com/BotiPro2007/PURPLE-dev-style/main/character2.png")
 character3_p = load_img_url("https://raw.githubusercontent.com/BotiPro2007/PURPLE/main/character3.png")
+#character3_p = load_img_url("https://raw.githubusercontent.com/BotiPro2007/PURPLE-dev-style/main/character3.png")
+knife_p = pygame.transform.scale(load_img_url("https://raw.githubusercontent.com/BotiPro2007/PURPLE-dev-style/main/knife.png"), (200,200))
 shuriken_p = load_img_url("https://raw.githubusercontent.com/BotiPro2007/PURPLE/main/shuriken.png")
 
 pleace = pygame.display.set_mode((700, 700), pygame.RESIZABLE)
@@ -40,6 +46,8 @@ playing= True
 #players_x = input["players"]["x"]
 #players_y = input["players"]["y"]
 
+
+fullscreen = False
 i2 = 0
 i = 0
 x = 0
@@ -60,16 +68,12 @@ connected = False
 typing = False
 host = ""
 name = ""
-redc = 1
-bluec = 1
-greenc = 1
 pcolor = (0,0,0)
 arrows = False
 win = -1
-i = 0
 stime=0
 aimd = 0
-wpos = [px,py]
+wdata = {"visible":False, "x":px,"y":py, "state":0, "reloaded":True}
 has_discord = True
 start_x = 0
 #           piros         kék           zöld          sárga           fehér        fekete
@@ -184,14 +188,13 @@ class Button:
 		self.visible = visible
 		if self.visible:
 			pygame.draw.rect(self.s, self.c, pygame.Rect(self.x, self.y, self.dx, self.dy))
-			self.s.blit(pygame.font.SysFont("Arial", self.fs).render(self.f, True, self.fc), (self.x, self.y))
-	def is_pressed(self, num : int):
+			self.s.blit(pygame.font.SysFont("Courier New", self.fs).render(self.f, True, self.fc), (self.x, self.y))
+	def is_pressed(self):
 		pos = pygame.mouse.get_pos()
-		if pos[0] > self.x and pos[1] > self.y and pos[0] < self.dx:
-			for event in pygame.event.get():
-				if event.type == pygame.MOUSEBUTTONDOWN or event.type == pygame.MOUSEBUTTONUP:
-					return True
-		return False
+		if pos[0] > self.x and pos[1] > self.y and pos[0] < self.x+self.dx and pos[1] < self.y+self.dy and pygame.mouse.get_pressed(3) == (True,False,False):
+			return True
+		else:
+			return False
 
 class Window:
 	def __init__(self, x:int, y:int , dx:int , dy:int,color ,title:str, description=""):
@@ -215,10 +218,10 @@ class Window:
 		self.fpx += old_x
 	def show(self,visible=True):
 		pygame.draw.rect(self.s, self.c, pygame.Rect(self.x, self.y, self.dx, self.dy))
-		self.s.blit(pygame.font.SysFont("Arial", 22).render(self.t, True, (255,255,255)), (self.x, self.y))
+		self.s.blit(pygame.font.SysFont("Courier New", 22).render(self.t, True, (255,255,255)), (self.x, self.y))
 		for button in self.buttons:
 			pygame.draw.rect(self.s, button.c, pygame.Rect(button.x, button.y, button.dx, button.dy))
-			self.s.blit(pygame.font.SysFont("Arial", button.fs).render(button.f, True, button.fc), (button.x, button.y))
+			self.s.blit(pygame.font.SysFont("Courier New", button.fs).render(button.f, True, button.fc), (button.x, button.y))
 #százalékszámítás: 50 : 100 * 50
 #           valamennyinek   százaléka
 def set_music():
@@ -231,6 +234,55 @@ def set_music():
 	#pygame.mixer.music.load(music_list[musica])
 	#pygame.mixer.music.set_volume(volume)
 	#pygame.mixer.music.play(10000)
+
+def weapon():
+	global wdata
+	global px
+	global py
+	global pcount
+	wdata["visible"] = True
+	wdata["reloaded"] = False
+	if character == 1:
+		while (aimd == 1 and wdata["y"] > 75) or (aimd == 3 and wdata["y"] < 625) or (aimd == 2 and wdata["x"] > 75) or (aimd == 0 and wdata["x"] < 625):
+			if aimd == 0: wdata["x"] += 100
+			elif aimd == 1: wdata["y"] -= 100
+			elif aimd == 2: wdata["x"] -= 100
+			elif aimd == 3: wdata["y"] += 100
+			if wdata["state"] == 1: wdata["state"] = 0
+			else: wdata["state"] += 1
+			time.sleep(0.25)
+			if debug: print(f"Oh yes I am going! My location: X: {wdata['x']} ; Y: {wdata['y']} ; AIMD: {aimd}")
+	elif character == 2:	
+		if aimd == 0 and px < 525: 
+			wdata["state"] = 0
+			wdata["y"] -= 100
+			time.sleep(0.2)
+			px += 200
+			pcount += 2
+		elif aimd == 1 and py > 175: 
+			wdata["state"] = 1
+			wdata["y"] -= 200
+			wdata["x"] -= 100
+			time.sleep(0.2)
+			py -= 200
+			pcount -= 14
+		elif aimd == 2 and px > 175: 
+			wdata["state"] = 2
+			wdata["x"] -= 200
+			wdata["y"] -= 100
+			time.sleep(0.2)
+			px -= 200
+			pcount -= 2
+		elif aimd == 3 and py < 525:
+			wdata["state"] = 3
+			wdata["x"] -= 100
+			time.sleep(0.2)
+			py += 200
+			pcount += 14
+		wdata.update({"visible":False, "reloaded": False})
+		print(f"X:{wdata['x']}; Y: {wdata['y']}")
+		time.sleep(0.5)
+	wdata.update({"visible":False, "x":px, "y":py, "reloaded":True})
 def coloring():
 	global pcolor
 	color = slot[pcount]
@@ -246,12 +298,10 @@ def add_color(key):
 	global slot
 	global pcount
 	global ppleace
-	global pcolor
-	global bluec
-	global greenc
-	global redc
+	global wdata
 	global win
-	wpos = [px, py]
+	if character == 1 and wdata["reloaded"]:wdata.update({"x":px, "y":py})
+	elif character == 2 and wdata["reloaded"]: wdata.update({"x":px+25, "y":py+25})
 	slotr = random.randint(0, 40)
 	#if slotr == 1:
 	#	slot[pcount] = (-1, -1, -1)
@@ -259,8 +309,9 @@ def add_color(key):
 	#	slot[pcount] = (1000, 1000, 1000)
 	#	print("ne má")
 	#else:
-	color = colors[random.randint(0, 5)]
-	slot[pcount] = color
+	if key != "attack" and wdata["reloaded"]:
+		color = colors[random.randint(0, 5)]
+		slot[pcount] = color
 	ppleace += 1
 	if key == "w":
 		pcount -= 7
@@ -270,9 +321,8 @@ def add_color(key):
 		pcount -= 1
 	elif key == "d":
 		pcount += 1
-	elif key == "attack":
-		pass
-	color = slot[pcount]
+	elif key == "attack" and wdata["reloaded"]:
+		if character > 0: threading.Thread(target=weapon).start()
 	#print(str(pcolor))
 	#print(win)
 	if win == 1:
@@ -280,14 +330,13 @@ def add_color(key):
 	if win >= 0:
 		win -= 1
 	else:
-		coloring()
-
+		if key != "attack":coloring()
 def multiplayer():
 	global win
 	if key != "-" and win != 1:
-		d = {"name":name, "key":key, "character":character}
+		d = {"name":name, "key":key, "aimd":aimd}
 	else:
-		d = {"name":name, "character":character}
+		d = {"name":name, "character":character, "aimd":aimd}
 	msg = pickle.dumps(d)
 	s.send(msg)
 	try:
@@ -330,18 +379,39 @@ def multiplayer():
 		i = 0
 		x = start_x
 	i = 0
-	for index in input:
+	for index in input:	
 		if type(input[index]) == type(dict()):
 			if input[index]["win"] == 1:
 				pygame.draw.rect(pleace, (255, 153, 0), pygame.Rect(input[index]["x"]+start_x, input[index]["y"], 50, 50))
-				pleace.blit(pygame.font.SysFont("Arial", 75).render(f"{str(index).capitalize()} won this round!", True, (255, 0, 255)), (0, 0))
+				pleace.blit(pygame.font.SysFont("Courier New", 50).render(f"{str(index).capitalize()} won this round!", True, (255, 0, 255)), (start_x+0, 0))
 				win = 1
 			else: pygame.draw.rect(pleace, input[index]["color"], pygame.Rect(input[index]["x"]+start_x, input[index]["y"], 50, 50))
 			if input[index]["character"] == 0:pleace.blit(character1_p,[input[index]["x"]+start_x,input[index]["y"]])
 			elif input[index]["character"] == 1:pleace.blit(character2_p,[input[index]["x"]+start_x,input[index]["y"]])
 			elif input[index]["character"] == 2:pleace.blit(character3_p,[input[index]["x"]+start_x,input[index]["y"]])
-			pleace.blit(pygame.font.SysFont("Arial", 25).render(str(index), True, (127.5, 127.5, 127.5)), (input[index]["x"]+start_x, input[index]["y"] - 25))
-			pleace.blit(pygame.font.SysFont("Arial", 35).render(str(input[index]["p-c"]), True, (100, 100, 100)), (input[index]["x"]+ 5+start_x, input[index]["y"]+5))
+			if input[index].get("wdata") != None: 
+				wdata = input[index]["wdata"]
+				if input[index]["character"] == 1:
+					if wdata["visible"]:
+						if wdata["state"] == 0:
+							blit_data = center_rotate(shuriken_p, 45, (wdata["x"]+start_x,wdata["y"]))
+							pleace.blit(blit_data[0], blit_data[1])
+						else: pleace.blit(shuriken_p, [wdata["x"]+start_x,wdata["y"]])
+				elif input[index]["character"] == 2:
+					if wdata["visible"]:
+						if wdata["state"] == 0: 
+							img, pos = center_rotate(knife_p, 270, (wdata["x"]+start_x,wdata["y"]))
+							pleace.blit(img, pos)
+						if wdata["state"] == 1:
+							pleace.blit(knife_p,(wdata["x"]+start_x,wdata["y"]))
+						if wdata["state"] == 2:
+							img, pos = center_rotate(knife_p, 90, (wdata["x"]+start_x,wdata["y"]))
+							pleace.blit(img, pos)
+						if wdata["state"] == 3:
+							img, pos = center_rotate(knife_p, 180, (wdata["x"]+start_x,wdata["y"]))
+							pleace.blit(img, pos)
+			pleace.blit(pygame.font.SysFont("Courier New", 25).render(str(index), True, (127.5, 127.5, 127.5)), (input[index]["x"]+start_x, input[index]["y"] - 25))
+			pleace.blit(pygame.font.SysFont("Courier New", 35).render(str(input[index]["p-c"]), True, (100, 100, 100)), (input[index]["x"]+ 5+start_x, input[index]["y"]+5))
 		i += 1
 	i = 0
 	# single player : pygame.draw.rect(pleace, pcolor, pygame.Rect(px, py, 50, 50))
@@ -375,8 +445,8 @@ def singleplayer():
 		i2 += 1
 		i = 0
 		x = start_x
-	if debug:print(pcolor)
-	#pleace.blit(pygame.font.SysFont("Arial", 35).render(str(ppleace), True, (100, 100, 100)), (px+ 5, py+5))
+	#if debug:print(pcolor)
+	#pleace.blit(pygame.font.SysFont("Courier New", 35).render(str(ppleace), True, (100, 100, 100)), (px+ 5, py+5))
 	red = pcolor[0]
 	green = pcolor[1]
 	blue = pcolor[2]
@@ -386,23 +456,41 @@ def singleplayer():
 			if win < 1:
 				win = 15
 		if win > 0:
-			pygame.draw.rect(pleace, (255, 153, 0), pygame.Rect(px + 5+start_x, py + 5, 40, 40))
-		if character == 0:pleace.blit(character1_p,[px+start_x,py])
-		elif character == 1:pleace.blit(character2_p,[px+start_x,py])
-		elif character == 2:pleace.blit(character3_p,[px+start_x,py])
+			pygame.draw.rect(pleace, (255, 153, 0), pygame.Rect(px+start_x, py, 50, 50))
+		if character == 0:pleace.blit(character1_p,(px+start_x,py))
+		elif character == 1:
+			if wdata["visible"]:
+				if wdata["state"] == 0:
+					blit_data = center_rotate(shuriken_p, 45, (wdata["x"]+start_x,wdata["y"]))
+					pleace.blit(blit_data[0], blit_data[1])
+				else: pleace.blit(shuriken_p, (wdata["x"]+start_x,wdata["y"]))
+			pleace.blit(character2_p,[px+start_x,py])
+		elif character == 2:
+			pleace.blit(character3_p,[px+start_x,py])
+			if wdata["visible"]:
+				if wdata["state"] == 0: 
+					img, pos = center_rotate(knife_p, 270, (wdata["x"]+start_x,wdata["y"]))
+					pleace.blit(img, pos)
+				if wdata["state"] == 1:
+					pleace.blit(knife_p,(wdata["x"]+start_x,wdata["y"]))
+				if wdata["state"] == 2:
+					img, pos = center_rotate(knife_p, 90, (wdata["x"]+start_x,wdata["y"]))
+					pleace.blit(img, pos)
+				if wdata["state"] == 3:
+					img, pos = center_rotate(knife_p, 180, (wdata["x"]+start_x,wdata["y"]))
+					pleace.blit(img, pos)
 	#elif pcolor[0] > 1000:
 	#	pygame
-	pleace.blit(pygame.font.SysFont("Arial", 25).render(name, True, (127.5, 127.5, 127.5)), (px+start_x, py - 25))
-	#print(pcolor)
+	pleace.blit(pygame.font.SysFont("Courier New", 25).render(name, True, (100, 0, 100)), (px+start_x, py - 25))
 
-character1 = Button(0, 200, 233, 400, (127.5,0,127.5), "Smile", 50, (255,255,255))
-character2 = Button(233, 200, 466, 400, (127.5,0,0), "Shur Iken", 50, (255,255,255))
-character3 = Button(466, 200, 700, 400, (0,0,127.5), "Ninja", 50, (255,255,255))
+character1 = Button(0, 200, 233, 400, (127.5,0,127.5), "Smile", 40, (255,255,255))
+character2 = Button(233, 200, 233, 400, (127.5,0,0), "Shur Iken", 40, (255,255,255))
+character3 = Button(466, 200, 233, 400, (0,0,127.5), "Ninja", 40, (255,255,255))
 
-#plus = Window(90,267,515,237,(57, 198, 57),"Saját ablak")
-#plus.add_button(Button(50,20,50,50,(255,0,0),"R",50, (255,255,255)))
-#plus.add_button(Button(50,20,50,50,(0,255,0),"G",50, (255,255,255)))
-#plus.add_button(Button(50,20,50,50,(0,0,255),"B",50, (255,255,255)))
+plus = Window(90,267,515,237,(57, 198, 57),"Add color")
+plus.add_button(Button(50,20,50,50,(255,0,0),"R",50, (255,255,255)))
+plus.add_button(Button(50,20,50,50,(0,255,0),"G",50, (255,255,255)))
+plus.add_button(Button(50,20,50,50,(0,0,255),"B",50, (255,255,255)))
 
 while playing:
 	#try:
@@ -423,15 +511,15 @@ while playing:
 			if event.type == pygame.KEYUP:
 				if event.key == pygame.K_w:
 					if not arrows:
-						if py > 75:
+						if py > 75 and not connected:
 							py -= 100
-							if not connected: add_color("w")
-							else: key = "w"
+							add_color("w")
+						else: key = "w"
 				elif event.key == pygame.K_s:
 					if not arrows:
 						if py < 625 and not connected:
-								py += 100
-								add_color("s")
+							py += 100
+							add_color("s")
 						else:key = "s"
 				elif event.key == pygame.K_d:
 					if not arrows:
@@ -480,14 +568,16 @@ while playing:
 					aimd = 2
 				elif event.key == pygame.K_KP6:
 					aimd = 0
-				elif event.key == pygame.K_KP5:
-					add_color("attack")
+				elif event.key == pygame.K_KP0:
+					if not connected: add_color("attack")
+					else: key = "attack"
 				elif event.key == pygame.K_ESCAPE:
 					start = 2
 					pleace.fill((0,0,0))
 			if event.type == pygame.VIDEORESIZE:
 				size = pygame.display.get_surface().get_size()
 				start_x = int(size[0]/2-350)
+				pleace.fill((0,0,0))
 			if event.type == pygame.KEYDOWN:
 				if event.key == pygame.K_F1:
 					volume -= 0.02
@@ -509,10 +599,19 @@ while playing:
 						arrows = True
 				elif event.key == pygame.K_F6:
 					pygame.mixer.music.stop()
+				elif event.key == pygame.K_F11:
+					if not fullscreen:
+						pleace = pygame.display.set_mode((1920, 1080), pygame.FULLSCREEN)
+						fullscreen = True
+					else:
+						pleace = pygame.display.set_mode((700, 700))
+						fullscreen = False
 		if connected:
+			pygame.draw.rect(pleace, (127, 0, 127), pygame.Rect(start_x-5, 0, 710, 705))
 			multiplayer()
 		#GENERATOR
 		else:
+			pygame.draw.rect(pleace, (127, 0, 127), pygame.Rect(start_x-5, 0, 710, 705))
 			if not render:
 				render = True
 				i2 = 0
@@ -532,7 +631,7 @@ while playing:
 					i2 += 1
 			singleplayer()
 	elif start == 2:
-		lol = False
+		reset = False
 		for event in pygame.event.get():
 			if event.type == pygame.QUIT:
 				if connected:
@@ -552,7 +651,7 @@ while playing:
 					if typing:
 						check()
 						start = 3
-						lol = True
+						reset = True
 					else:
 						typing = True
 				elif event.key == pygame.K_DOWN:
@@ -572,11 +671,11 @@ while playing:
 		pygame.draw.rect(pleace, (127.5, 0, 127.5), pygame.Rect(0, 400, 2000, 110))
 		pygame.draw.rect(pleace, (127.5, 0, 127.5), pygame.Rect(0, 540, 2000, 110))
 		pleace.blit(pygame.transform.scale(start_img, (693,329)),[start_x,0])
-		pleace.blit(pygame.font.SysFont("Arial", 50).render("Name:", True, (255, 255, 255)), (0, 400))
-		pleace.blit(pygame.font.SysFont("Arial", 50).render(name , True, (255, 255, 255)), (0, 450))
-		pleace.blit(pygame.font.SysFont("Arial", 50).render("Hostname:", True, (255, 255, 255)), (0, 540))
-		pleace.blit(pygame.font.SysFont("Arial", 50).render(host , True, (255, 255, 255)), (0, 590))
-		if lol: pleace.fill((0,0,0))
+		pleace.blit(pygame.font.SysFont("Courier New", 50).render("Name:", True, (255, 255, 255)), (0, 400))
+		pleace.blit(pygame.font.SysFont("Courier New", 50).render(name , True, (255, 255, 255)), (0, 450))
+		pleace.blit(pygame.font.SysFont("Courier New", 50).render("Hostname:", True, (255, 255, 255)), (0, 540))
+		pleace.blit(pygame.font.SysFont("Courier New", 50).render(host , True, (255, 255, 255)), (0, 590))
+		if reset: pleace.fill((0,0,0))
 	elif start == 3:
 		for event in pygame.event.get():
 			if event.type == pygame.QUIT:
@@ -585,17 +684,17 @@ while playing:
 				size = pygame.display.get_surface().get_size()
 				start_x = int(size[0]/2-350)
 		character1.show()
-		if character1.is_pressed(0):
+		if character1.is_pressed():
 			character = 0
 			start = 1
 			pleace.fill((0,0,0))
 		character2.show()
-		if character2.is_pressed(0):
+		if character2.is_pressed():
 			start = 1
 			character = 1
 			pleace.fill((0,0,0))
 		character3.show()
-		if character3.is_pressed(0):
+		if character3.is_pressed():
 			start = 1
 			character = 2
 			pleace.fill((0,0,0))
