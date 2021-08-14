@@ -36,7 +36,7 @@ character2_p = load_img_url("https://raw.githubusercontent.com/BotiPro2007/PURPL
 character3_p = load_img_url("https://raw.githubusercontent.com/BotiPro2007/PURPLE/main/character3.png")
 #character3_p = load_img_url("https://raw.githubusercontent.com/BotiPro2007/PURPLE-dev-style/main/character3.png")
 knife_p = pygame.transform.scale(load_img_url("https://raw.githubusercontent.com/BotiPro2007/PURPLE-dev-style/main/knife.png"), (200,200))
-shuriken_p = load_img_url("https://raw.githubusercontent.com/BotiPro2007/PURPLE/main/shuriken.png")
+shuriken_p = load_img_url("https://raw.githubusercontent.com/BotiPro2007/PURPLE/Alpha/shuriken.png")
 
 pleace = pygame.display.set_mode((700, 700), pygame.RESIZABLE)
 pygame.display.set_caption("PURPLE")
