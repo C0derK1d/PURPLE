@@ -492,6 +492,11 @@ plus.add_button(Button(50,20,50,50,(255,0,0),"R",50, (255,255,255)))
 plus.add_button(Button(50,20,50,50,(0,255,0),"G",50, (255,255,255)))
 plus.add_button(Button(50,20,50,50,(0,0,255),"B",50, (255,255,255)))
 
+#plus = Window(90,267,515,237,(57, 198, 57),"Saját ablak")
+#plus.add_button(Button(50,20,50,50,(255,0,0),"R",50, (255,255,255)))
+#plus.add_button(Button(50,20,50,50,(0,255,0),"G",50, (255,255,255)))
+#plus.add_button(Button(50,20,50,50,(0,0,255),"B",50, (255,255,255)))
+
 while playing:
 	#try:
 	#	if str(s.recv(1024)).startswith("÷"):
