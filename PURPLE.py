@@ -379,8 +379,8 @@ def multiplayer():
 		i = 0
 		x = start_x
 	i = 0
-	for index in input:	
-		if type(input[index]) == type(dict()):
+	for index in input:
+		if type(input[index]) == type(dict()) and index != "wdata":
 			if input[index]["win"] == 1:
 				pygame.draw.rect(pleace, (255, 153, 0), pygame.Rect(input[index]["x"]+start_x, input[index]["y"], 50, 50))
 				pleace.blit(pygame.font.SysFont("Courier New", 50).render(f"{str(index).capitalize()} won this round!", True, (255, 0, 255)), (start_x+0, 0))
@@ -410,9 +410,12 @@ def multiplayer():
 						if wdata["state"] == 3:
 							img, pos = center_rotate(knife_p, 180, (wdata["x"]+start_x,wdata["y"]))
 							pleace.blit(img, pos)
+			pleace.blit(pygame.font.SysFont("Courier New", 35).render(str(index), True, (127, 0, 127)), (710+start_x, i*50))
+			pleace.blit(pygame.font.SysFont("Courier New", 35).render(str(input[index]["p-c"]), True, (127, 0, 127)), (800+start_x, 0+i*50))
+			pleace.blit(pygame.font.SysFont("Courier New", 35).render(str(input[index]["level"]), True, (127, 0, 127)), (900+start_x, 0+i*50))
 			pleace.blit(pygame.font.SysFont("Courier New", 25).render(str(index), True, (127.5, 127.5, 127.5)), (input[index]["x"]+start_x, input[index]["y"] - 25))
-			pleace.blit(pygame.font.SysFont("Courier New", 35).render(str(input[index]["p-c"]), True, (100, 100, 100)), (input[index]["x"]+ 5+start_x, input[index]["y"]+5))
-		i += 1
+			#pleace.blit(pygame.font.SysFont("Courier New", 35).render(str(input[index]["p-c"]), True, (100, 100, 100)), (input[index]["x"]+ 5+start_x, input[index]["y"]+5))
+			i += 1
 	i = 0
 	# single player : pygame.draw.rect(pleace, pcolor, pygame.Rect(px, py, 50, 50))
 def singleplayer():
@@ -479,8 +482,6 @@ def singleplayer():
 				if wdata["state"] == 3:
 					img, pos = center_rotate(knife_p, 180, (wdata["x"]+start_x,wdata["y"]))
 					pleace.blit(img, pos)
-	#elif pcolor[0] > 1000:
-	#	pygame
 	pleace.blit(pygame.font.SysFont("Courier New", 25).render(name, True, (100, 0, 100)), (px+start_x, py - 25))
 
 character1 = Button(0, 200, 233, 400, (127.5,0,127.5), "Smile", 40, (255,255,255))
@@ -498,6 +499,7 @@ plus.add_button(Button(50,20,50,50,(0,0,255),"B",50, (255,255,255)))
 #plus.add_button(Button(50,20,50,50,(0,0,255),"B",50, (255,255,255)))
 
 while playing:
+	pleace.fill((0,0,0))
 	#try:
 	#	if str(s.recv(1024)).startswith("÷"):
 	#		print(str(s.recv(1024)))
@@ -505,7 +507,7 @@ while playing:
 	#		msg = pickle.dumps(d)
 	#		s.send(msg)
 	#except:
-	#	pass
+	#	pass	
 	if start == 1:
 		key = "-"
 		for event in pygame.event.get():
@@ -578,11 +580,10 @@ while playing:
 					else: key = "attack"
 				elif event.key == pygame.K_ESCAPE:
 					start = 2
-					pleace.fill((0,0,0))
+					if connected: s.close()
 			if event.type == pygame.VIDEORESIZE:
 				size = pygame.display.get_surface().get_size()
 				start_x = int(size[0]/2-350)
-				pleace.fill((0,0,0))
 			if event.type == pygame.KEYDOWN:
 				if event.key == pygame.K_F1:
 					volume -= 0.02
@@ -609,7 +610,7 @@ while playing:
 						pleace = pygame.display.set_mode((1920, 1080), pygame.FULLSCREEN)
 						fullscreen = True
 					else:
-						pleace = pygame.display.set_mode((700, 700))
+						pleace = pygame.display.set_mode((700, 700), pygame.RESIZABLE)
 						fullscreen = False
 		if connected:
 			pygame.draw.rect(pleace, (127, 0, 127), pygame.Rect(start_x-5, 0, 710, 705))
@@ -680,7 +681,6 @@ while playing:
 		pleace.blit(pygame.font.SysFont("Courier New", 50).render(name , True, (255, 255, 255)), (0, 450))
 		pleace.blit(pygame.font.SysFont("Courier New", 50).render("Hostname:", True, (255, 255, 255)), (0, 540))
 		pleace.blit(pygame.font.SysFont("Courier New", 50).render(host , True, (255, 255, 255)), (0, 590))
-		if reset: pleace.fill((0,0,0))
 	elif start == 3:
 		for event in pygame.event.get():
 			if event.type == pygame.QUIT:
@@ -692,16 +692,13 @@ while playing:
 		if character1.is_pressed():
 			character = 0
 			start = 1
-			pleace.fill((0,0,0))
 		character2.show()
 		if character2.is_pressed():
 			start = 1
 			character = 1
-			pleace.fill((0,0,0))
 		character3.show()
 		if character3.is_pressed():
 			start = 1
 			character = 2
-			pleace.fill((0,0,0))
 	pygame.display.update()
 	pygame.time.Clock().tick(60)
