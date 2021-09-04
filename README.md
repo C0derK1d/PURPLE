@@ -6,8 +6,15 @@ This is the PURPLE's dowload page!
 
 The PURPLE in fact is a TPS(Third Person Shooter) and a colormixer game.
 
-**Download**
+**Download client**
 
-To dowload the installer go to the *"dist"* folder and download!
+To dowload the installer go here -> https://boti.evonit.hu/PURPLE/PURPLE.msi to download!
 
-Thank you!
+**Download server**
+
+1. Download the server folder.
+2. Configure mod.ini .
+3. To start the server you should install Python.
+4. Run the server and done!
+
+Good luck have fun, painters!

@@ -27,16 +27,29 @@ def center_rotate(image, angle, pos):
 	pos = rot_image.get_rect(center = image.get_rect(topleft = pos).center).topleft
 	return rot_image, pos
 
-start_img = load_img_url("https://cdn.discordapp.com/attachments/767022409563504672/820584228915904512/purplogo4.3.png")
-icon = load_img_url("https://raw.githubusercontent.com/BotiPro2007/PURPLE/main/PURPLE32.png")
-character1_p = load_img_url("https://raw.githubusercontent.com/BotiPro2007/PURPLE/main/character1.png")
-#character1_p = load_img_url("https://raw.githubusercontent.com/BotiPro2007/PURPLE-dev-style/main/character1.png")
-character2_p = load_img_url("https://raw.githubusercontent.com/BotiPro2007/PURPLE/main/character2.png")
-#character2_p = load_img_url("https://raw.githubusercontent.com/BotiPro2007/PURPLE-dev-style/main/character2.png")
-character3_p = load_img_url("https://raw.githubusercontent.com/BotiPro2007/PURPLE/main/character3.png")
-#character3_p = load_img_url("https://raw.githubusercontent.com/BotiPro2007/PURPLE-dev-style/main/character3.png")
+'''
+OFFLINE MODE
+start_img = pygame.image.load("PURPLE-DC.png")
+icon = pygame.image.load("purple32.png")
+character1_p = pygame.image.load("character1.png")
+character2_p = pygame.image.load("character2.png")
+character3_p = pygame.image.load("character3.png")
+shuriken_p = pygame.image.load("shuriken.png")
+knife_p = pygame.image.load("knife.png")
+
+DEV-STYLE
+character1_p = load_img_url("https://raw.githubusercontent.com/BotiPro2007/PURPLE-dev-style/main/character1.png")
+character2_p = load_img_url("https://raw.githubusercontent.com/BotiPro2007/PURPLE-dev-style/main/character2.png")
+character3_p = load_img_url("https://raw.githubusercontent.com/BotiPro2007/PURPLE-dev-style/main/character3.png")
 knife_p = pygame.transform.scale(load_img_url("https://raw.githubusercontent.com/BotiPro2007/PURPLE-dev-style/main/knife.png"), (200,200))
-shuriken_p = load_img_url("https://raw.githubusercontent.com/BotiPro2007/PURPLE/Alpha/shuriken.png")
+shuriken_p = load_img_url("https://raw.githubusercontent.com/BotiPro2007/PURPLE/main/shuriken.png")
+'''
+
+start_img = load_img_url("https://cdn.discordapp.com/attachments/767022409563504672/820584228915904512/purplogo4.3.png")
+character1_p = load_img_url("https://raw.githubusercontent.com/BotiPro2007/PURPLE/main/character1.png")
+character2_p = load_img_url("https://raw.githubusercontent.com/BotiPro2007/PURPLE/main/character2.png")
+character3_p = load_img_url("https://raw.githubusercontent.com/BotiPro2007/PURPLE/main/character3.png")
+knife_p = pygame.transform.scale(load_img_url("https://raw.githubusercontent.com/BotiPro2007/PURPLE/main/sword.png"), (200,200))
 
 pleace = pygame.display.set_mode((700, 700), pygame.RESIZABLE)
 pygame.display.set_caption("PURPLE")
@@ -372,7 +385,8 @@ def multiplayer():
 				pygame.draw.rect(pleace, (0, 0, 0), pygame.Rect(x + 25, y + 37, 50, 25))
 				pygame.draw.rect(pleace, (0, 0, 0), pygame.Rect(x + 37, y + 23, 25, 50))
 			else:
-				pygame.draw.rect(pleace, slot[count], pygame.Rect(x, y, 100, 100))
+				pygame.draw.rect(pleace, (100,0,100), pygame.Rect(x, y, 100, 100))
+				pygame.draw.rect(pleace, slot[count], pygame.Rect(x+2, y+2, 98, 98))
 			i += 1
 			count += 1
 		i2 += 1
@@ -413,7 +427,7 @@ def multiplayer():
 			pleace.blit(pygame.font.SysFont("Courier New", 35).render(str(index), True, (127, 0, 127)), (710+start_x, i*50))
 			pleace.blit(pygame.font.SysFont("Courier New", 35).render(str(input[index]["p-c"]), True, (127, 0, 127)), (800+start_x, 0+i*50))
 			pleace.blit(pygame.font.SysFont("Courier New", 35).render(str(input[index]["level"]), True, (127, 0, 127)), (900+start_x, 0+i*50))
-			pleace.blit(pygame.font.SysFont("Courier New", 25).render(str(index), True, (127.5, 127.5, 127.5)), (input[index]["x"]+start_x, input[index]["y"] - 25))
+			pleace.blit(pygame.font.SysFont("Courier New", 25, bold=True).render(str(index), True, (127.5, 127.5, 127.5)), (input[index]["x"]+start_x, input[index]["y"] - 25))
 			#pleace.blit(pygame.font.SysFont("Courier New", 35).render(str(input[index]["p-c"]), True, (100, 100, 100)), (input[index]["x"]+ 5+start_x, input[index]["y"]+5))
 			i += 1
 	i = 0
@@ -442,7 +456,8 @@ def singleplayer():
 				pygame.draw.rect(pleace, (0, 0, 0), pygame.Rect(x + 25, y + 37, 50, 25))
 				pygame.draw.rect(pleace, (0, 0, 0), pygame.Rect(x + 37, y + 23, 25, 50))
 			else:
-				pygame.draw.rect(pleace, slot[count], pygame.Rect(x, y, 100, 100))
+				pygame.draw.rect(pleace, (100,0,100), pygame.Rect(x, y, 100, 100))
+				pygame.draw.rect(pleace, slot[count], pygame.Rect(x+2, y+2, 98, 98))
 			i += 1
 			count += 1
 		i2 += 1
@@ -482,7 +497,7 @@ def singleplayer():
 				if wdata["state"] == 3:
 					img, pos = center_rotate(knife_p, 180, (wdata["x"]+start_x,wdata["y"]))
 					pleace.blit(img, pos)
-	pleace.blit(pygame.font.SysFont("Courier New", 25).render(name, True, (100, 0, 100)), (px+start_x, py - 25))
+	pleace.blit(pygame.font.SysFont("Courier New", 25, bold=True).render(name, True, (100, 0, 100)), (px+start_x, py - 25))
 
 character1 = Button(0, 200, 233, 400, (127.5,0,127.5), "Smile", 40, (255,255,255))
 character2 = Button(233, 200, 233, 400, (127.5,0,0), "Shur Iken", 40, (255,255,255))
