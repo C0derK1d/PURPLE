@@ -9,8 +9,6 @@ import os
 import io
 os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = "hide"
 import pygame
-import tkinter
-from tkinter import filedialog
 from pypresence import Presence
 import pypresence
 
@@ -46,6 +44,7 @@ shuriken_p = load_img_url("https://raw.githubusercontent.com/BotiPro2007/PURPLE/
 '''
 
 start_img = load_img_url("https://cdn.discordapp.com/attachments/767022409563504672/820584228915904512/purplogo4.3.png")
+icon = load_img_url("https://raw.githubusercontent.com/BotiPro2007/PURPLE/main/PURPLE32.png")
 character1_p = load_img_url("https://raw.githubusercontent.com/BotiPro2007/PURPLE/main/character1.png")
 character2_p = load_img_url("https://raw.githubusercontent.com/BotiPro2007/PURPLE/main/character2.png")
 character3_p = load_img_url("https://raw.githubusercontent.com/BotiPro2007/PURPLE/main/character3.png")
@@ -66,10 +65,6 @@ i = 0
 x = 0
 slot = []
 y = 0
-py = 25
-px = 25
-pcount = 0
-ppleace = 0
 key = "-"
 got = False
 debug = False
@@ -81,12 +76,9 @@ connected = False
 typing = False
 host = ""
 name = ""
-pcolor = (0,0,0)
-arrows = False
 win = -1
 stime=0
-aimd = 0
-wdata = {"visible":False, "x":px,"y":py, "state":0, "reloaded":True}
+wdata = {"visible":False, "x":25,"y":25, "state":0, "reloaded":True}
 has_discord = True
 start_x = 0
 #           piros         kék           zöld          sárga           fehér        fekete
@@ -102,9 +94,6 @@ try:
 	RPC.update(large_image="logo", large_text="PURPLE")
 except pypresence.exceptions.InvalidPipe:
 	has_discord = False
-
-def join(asd):
-	print("nice")
 
 def check():
 	global host
@@ -183,6 +172,88 @@ def ink_add_for_rgb(list_of_colours : list):
 
     return cmyk_to_rgb(C, M, Y, K)
 
+class Player(pygame.sprite.Sprite):
+	def __init__(self, color, scale, type, pos = [25,25]):
+		pygame.sprite.Sprite.__init__(self)
+		
+		
+		self.type = type
+		self.pos = pos
+		self.level = 0
+		self.count = 0
+		self.color = color
+		self.aimd = 0
+		self.win = -1
+		self.wdata = {"visible":False, "x":pos[0],"y":pos[1], "state":0, "reloaded":True}
+		self.scale = scale
+		self.image = pygame.Surface([50*scale, 50*scale])
+		self.image.fill(color)
+	
+	def coloring(self):
+		color = slot[self.count]
+		colorline = (self.color[0], self.color[1], self.color[2],0.5)
+		if self.color[0] <= 60 or self.color[1] <= 60 or self.color[2] <= 60: colorline = (min(self.color[0]*2, 255),min(self.color[1]*2, 255),min(self.color[2]*2, 255),0.5)
+		#(min(pcolor[0]*2, 255),min(pcolor[1]*2, 255),min(pcolor[2]*2, 255),0.5),
+		if debug:print(color)
+		self.color = ink_add_for_rgb([
+						colorline,
+						(color[0],color[1],color[2],0.5)
+						])
+	
+	def key_check(self):
+		k = "-"
+		e = pygame.event.get(eventtype=pygame.KEYUP)
+		if len(e) > 0: 
+			key = e[0].key
+		else: return
+		oldc = self.count
+		if key == pygame.K_w or key == pygame.K_UP:
+			if self.pos[1] > 75 and not connected:
+				self.pos[1] -= 100
+				self.count -= 7
+			else: k = "w"
+		elif key == pygame.K_s or key == pygame.K_DOWN:
+			if self.pos[1] < 625 and not connected:
+				self.pos[1] += 100	
+				self.count += 7
+			else: k = "s"
+		elif key == pygame.K_a or key == pygame.K_LEFT:
+			if self.pos[0] > 75 and not connected:
+				self.pos[0] -= 100
+				self.count -= 1
+			else: k="a"
+		elif key == pygame.K_d or key == pygame.K_RIGHT:
+			if self.pos[0] < 625 and not connected:
+				self.pos[0] += 100
+				self.count += 1
+			else: k = "d"
+		elif key == pygame.K_KP0 and wdata["reloaded"]:
+			if self.type > 0 and not connected: threading.Thread(target=weapon).start()
+			key = "attack"
+		elif key == pygame.K_c:
+			self.color = (0, 0, 0)
+			self.level = 0
+		elif key == pygame.K_KP8:
+			self.aimd = 1
+		elif key == pygame.K_KP2:
+			self.aimd = 3
+		elif key == pygame.K_KP4:
+			self.aimd = 2
+		elif key == pygame.K_KP6:
+			self.aimd = 0
+		if oldc != self.count:	
+			if not key == pygame.K_KP0 and wdata["reloaded"]:
+				color = colors[random.randint(0, 5)]
+				slot[oldc] = color
+			if self.win == 1:
+				self.coloring()
+			if self.win >= 0:
+				self.win -= 1
+			else:
+				if not key == pygame.K_KP0: self.coloring()
+		
+		return k
+	
 class Button:
 	def __init__(self, x : int, y : int, dx : int, dy : int, color, font : str, fs : int, fc):
 		global pleace
@@ -256,94 +327,48 @@ def weapon():
 	wdata["visible"] = True
 	wdata["reloaded"] = False
 	if character == 1:
-		while (aimd == 1 and wdata["y"] > 75) or (aimd == 3 and wdata["y"] < 625) or (aimd == 2 and wdata["x"] > 75) or (aimd == 0 and wdata["x"] < 625):
-			if aimd == 0: wdata["x"] += 100
-			elif aimd == 1: wdata["y"] -= 100
-			elif aimd == 2: wdata["x"] -= 100
-			elif aimd == 3: wdata["y"] += 100
+		while (p1.aimd == 1 and wdata["y"] > 75) or (p1.aimd == 3 and wdata["y"] < 625) or (p1.aimd == 2 and wdata["x"] > 75) or (p1.aimd == 0 and wdata["x"] < 625):
+			if p1.aimd == 0: wdata["x"] += 100
+			elif p1.aimd == 1: wdata["y"] -= 100
+			elif p1.aimd == 2: wdata["x"] -= 100
+			elif p1.aimd == 3: wdata["y"] += 100
 			if wdata["state"] == 1: wdata["state"] = 0
 			else: wdata["state"] += 1
 			time.sleep(0.25)
 			if debug: print(f"Oh yes I am going! My location: X: {wdata['x']} ; Y: {wdata['y']} ; AIMD: {aimd}")
+		wdata.update({"visible":False, "reloaded":True, "x":p1.pos[0], "y":p1.pos[1]})
 	elif character == 2:	
-		if aimd == 0 and px < 525: 
+		if aimd == 0 and p1.pos[0] < 525: 
 			wdata["state"] = 0
 			wdata["y"] -= 100
 			time.sleep(0.2)
-			px += 200
-			pcount += 2
-		elif aimd == 1 and py > 175: 
+			p1.pos[0] += 200
+			p1.count += 2
+		elif aimd == 1 and p1.pos[1] > 175: 
 			wdata["state"] = 1
 			wdata["y"] -= 200
 			wdata["x"] -= 100
 			time.sleep(0.2)
-			py -= 200
-			pcount -= 14
-		elif aimd == 2 and px > 175: 
+			p1.pos[1] -= 200
+			p1.count -= 14
+		elif aimd == 2 and p1.pos[0] > 175: 
 			wdata["state"] = 2
 			wdata["x"] -= 200
 			wdata["y"] -= 100
 			time.sleep(0.2)
-			px -= 200
-			pcount -= 2
-		elif aimd == 3 and py < 525:
+			p1.pos[0] -= 200
+			p1.count -= 2
+		elif aimd == 3 and p1.pos[1] < 525:
 			wdata["state"] = 3
 			wdata["x"] -= 100
 			time.sleep(0.2)
-			py += 200
-			pcount += 14
+			p1.pos[1] += 200
+			p1.count += 14
 		wdata.update({"visible":False, "reloaded": False})
 		print(f"X:{wdata['x']}; Y: {wdata['y']}")
 		time.sleep(0.5)
-	wdata.update({"visible":False, "x":px, "y":py, "reloaded":True})
-def coloring():
-	global pcolor
-	color = slot[pcount]
-	colorline = (pcolor[0], pcolor[1], pcolor[2],0.5)
-	if pcolor[0] <= 60 or pcolor[1] <= 60 or pcolor[2] <= 60: colorline = (min(pcolor[0]*2, 255),min(pcolor[1]*2, 255),min(pcolor[2]*2, 255),0.5)
-	#(min(pcolor[0]*2, 255),min(pcolor[1]*2, 255),min(pcolor[2]*2, 255),0.5),
-	if debug:print(color)
-	pcolor = ink_add_for_rgb([
-					colorline,
-					(color[0],color[1],color[2],0.5)
-					])
-def add_color(key):
-	global slot
-	global pcount
-	global ppleace
-	global wdata
-	global win
-	if character == 1 and wdata["reloaded"]:wdata.update({"x":px, "y":py})
-	elif character == 2 and wdata["reloaded"]: wdata.update({"x":px+25, "y":py+25})
-	slotr = random.randint(0, 40)
-	#if slotr == 1:
-	#	slot[pcount] = (-1, -1, -1)
-	#elif slotr == 2:
-	#	slot[pcount] = (1000, 1000, 1000)
-	#	print("ne má")
-	#else:
-	if key != "attack" and wdata["reloaded"]:
-		color = colors[random.randint(0, 5)]
-		slot[pcount] = color
-	ppleace += 1
-	if key == "w":
-		pcount -= 7
-	elif key == "s":
-		pcount += 7
-	elif key == "a":
-		pcount -= 1
-	elif key == "d":
-		pcount += 1
-	elif key == "attack" and wdata["reloaded"]:
-		if character > 0: threading.Thread(target=weapon).start()
-	#print(str(pcolor))
-	#print(win)
-	if win == 1:
-		coloring()
-	if win >= 0:
-		win -= 1
-	else:
-		if key != "attack":coloring()
+		wdata.update({"visible":False, "reloaded":True, "x":p1.pos[0]+25, "y":p1.pos[1]+25})
+
 def multiplayer():
 	global win
 	if key != "-" and win != 1:
@@ -355,10 +380,7 @@ def multiplayer():
 	try:
 		input = pickle.loads(s.recv(1024))
 	except EOFError:
-		d = {"name":name, "key":key, "character":character}
-		msg = pickle.dumps(d)
-		s.send(msg)
-		print("Waiting for input...")
+		return
 	#except:
 	#	input = s.recv(1024)
 	#	print("The server said:"+str(input))
@@ -433,12 +455,6 @@ def multiplayer():
 	i = 0
 	# single player : pygame.draw.rect(pleace, pcolor, pygame.Rect(px, py, 50, 50))
 def singleplayer():
-	global name
-	global px
-	global py
-	global colors
-	global win
-	global slot
 	i2 = 0
 	i = 0
 	x = start_x
@@ -465,26 +481,26 @@ def singleplayer():
 		x = start_x
 	#if debug:print(pcolor)
 	#pleace.blit(pygame.font.SysFont("Courier New", 35).render(str(ppleace), True, (100, 100, 100)), (px+ 5, py+5))
-	red = pcolor[0]
-	green = pcolor[1]
-	blue = pcolor[2]
-	if pcolor[0] <= 255:
-		pygame.draw.rect(pleace,pcolor, pygame.Rect(px+start_x, py, 50, 50))
+	red = p1.color[0]
+	green = p1.color[1]
+	blue = p1.color[2]
+	if p1.color[0] <= 255:
+		pygame.draw.rect(pleace,p1.color, pygame.Rect(p1.pos[0]+start_x, p1.pos[1], 50, 50))
 		if red == blue and red > green and green < 127.5 and red > 50 and blue > 50 and red < 255 and blue < 255:
-			if win < 1:
-				win = 15
-		if win > 0:
-			pygame.draw.rect(pleace, (255, 153, 0), pygame.Rect(px+start_x, py, 50, 50))
-		if character == 0:pleace.blit(character1_p,(px+start_x,py))
-		elif character == 1:
+			if p1.win < 1:
+				p1.win = 15
+		if p1.win > 0:
+			pygame.draw.rect(pleace, (255, 153, 0), pygame.Rect(p1.pos[0]+start_x, p1.pos[1], 50, 50))
+		if p1.type == 0:pleace.blit(character1_p,(p1.pos[0]+start_x,p1.pos[1]))
+		elif p1.type == 1:
 			if wdata["visible"]:
 				if wdata["state"] == 0:
 					blit_data = center_rotate(shuriken_p, 45, (wdata["x"]+start_x,wdata["y"]))
 					pleace.blit(blit_data[0], blit_data[1])
 				else: pleace.blit(shuriken_p, (wdata["x"]+start_x,wdata["y"]))
-			pleace.blit(character2_p,[px+start_x,py])
-		elif character == 2:
-			pleace.blit(character3_p,[px+start_x,py])
+			pleace.blit(character2_p,[p1.pos[0]+start_x,p1.pos[1]])
+		elif p1.type == 2:
+			pleace.blit(character3_p,[p1.pos[0]+start_x,p1.pos[1]])
 			if wdata["visible"]:
 				if wdata["state"] == 0: 
 					img, pos = center_rotate(knife_p, 270, (wdata["x"]+start_x,wdata["y"]))
@@ -497,7 +513,7 @@ def singleplayer():
 				if wdata["state"] == 3:
 					img, pos = center_rotate(knife_p, 180, (wdata["x"]+start_x,wdata["y"]))
 					pleace.blit(img, pos)
-	pleace.blit(pygame.font.SysFont("Courier New", 25, bold=True).render(name, True, (100, 0, 100)), (px+start_x, py - 25))
+	pleace.blit(pygame.font.SysFont("Courier New", 25, bold=True).render(name, True, (100, 0, 100)), (p1.pos[0]+start_x, p1.pos[1] - 25))
 
 character1 = Button(0, 200, 233, 400, (127.5,0,127.5), "Smile", 40, (255,255,255))
 character2 = Button(233, 200, 233, 400, (127.5,0,0), "Shur Iken", 40, (255,255,255))
@@ -524,78 +540,12 @@ while playing:
 	#except:
 	#	pass	
 	if start == 1:
-		key = "-"
+		if render: key = p1.key_check()
 		for event in pygame.event.get():
 			if event.type == pygame.QUIT:
 				if connected:
 					s.close()
 				playing = False
-			if event.type == pygame.KEYUP:
-				if event.key == pygame.K_w:
-					if not arrows:
-						if py > 75 and not connected:
-							py -= 100
-							add_color("w")
-						else: key = "w"
-				elif event.key == pygame.K_s:
-					if not arrows:
-						if py < 625 and not connected:
-							py += 100
-							add_color("s")
-						else:key = "s"
-				elif event.key == pygame.K_d:
-					if not arrows:
-						if px < 625 and not connected:
-							px += 100
-							add_color("d")
-						else: key = "d"
-				elif event.key == pygame.K_a:
-					if not arrows:
-						if px > 75 and not connected:
-							px -= 100
-							add_color("a")
-						else: key = "a"
-				elif event.key == pygame.K_UP:
-					if arrows:
-						if py > 75 and not connected:
-							py -= 100
-							add_color("w")
-						else: key = "w"
-				elif event.key == pygame.K_DOWN:
-					if arrows:
-						if py < 625 and not connected:
-							py += 100
-							add_color("s")
-						else: key = "s"
-				elif event.key == pygame.K_RIGHT:
-					if arrows:
-						if px < 625 and not connected:
-							px += 100
-							add_color("d")
-						else: key = "d"
-				elif event.key == pygame.K_LEFT:
-					if arrows:
-						if px > 75 and not connected:
-							px -= 100
-							add_color("a")
-						else: key = "a"
-				elif event.key == pygame.K_c:
-					pcolor = (0, 0, 0)
-					ppleace = 0
-				elif event.key == pygame.K_KP8:
-					aimd = 1
-				elif event.key == pygame.K_KP2:
-					aimd = 3
-				elif event.key == pygame.K_KP4:
-					aimd = 2
-				elif event.key == pygame.K_KP6:
-					aimd = 0
-				elif event.key == pygame.K_KP0:
-					if not connected: add_color("attack")
-					else: key = "attack"
-				elif event.key == pygame.K_ESCAPE:
-					start = 2
-					if connected: s.close()
 			if event.type == pygame.VIDEORESIZE:
 				size = pygame.display.get_surface().get_size()
 				start_x = int(size[0]/2-350)
@@ -605,13 +555,6 @@ while playing:
 					pygame.mixer.music.set_volume(volume)
 				elif event.key == pygame.K_F2:
 					volume += 0.02
-					pygame.mixer.music.set_volume(volume)
-				elif event.key == pygame.K_F3:
-					pygame.mixer.music.stop()
-					root = tkinter.Tk()
-					root.withdraw()
-					pygame.mixer.music.load(str(filedialog.askopenfilename()))
-					pygame.mixer.music.play(1000000)
 					pygame.mixer.music.set_volume(volume)
 				elif event.key == pygame.K_F4:
 					if arrows:
@@ -627,6 +570,9 @@ while playing:
 					else:
 						pleace = pygame.display.set_mode((700, 700), pygame.RESIZABLE)
 						fullscreen = False
+				if event.key == pygame.K_ESCAPE:
+					start = 2
+					if connected: s.close()
 		if connected:
 			pygame.draw.rect(pleace, (127, 0, 127), pygame.Rect(start_x-5, 0, 710, 705))
 			multiplayer()
@@ -705,15 +651,15 @@ while playing:
 				start_x = int(size[0]/2-350)
 		character1.show()
 		if character1.is_pressed():
-			character = 0
+			p1 = Player((0,0,0), 1, 0)
 			start = 1
 		character2.show()
 		if character2.is_pressed():
+			p1 = Player((0,0,0), 1, 1)
 			start = 1
-			character = 1
 		character3.show()
 		if character3.is_pressed():
+			p1 = Player((0,0,0), 1, 2)
 			start = 1
-			character = 2
 	pygame.display.update()
 	pygame.time.Clock().tick(60)
