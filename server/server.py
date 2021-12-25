@@ -10,7 +10,7 @@ config = configparser.ConfigParser()
 config.read("mod.ini")
 soptions = config["ServerOptions"]
 koptions = config["KillOptions"]
-debug = bool(int(soptions["debugMode"]))
+debug = eval(soptions["debugMode"])
 max_players = int(soptions["maxPlayers"])
 if max_players > 4: max_players = 4
 s = socket.socket()
